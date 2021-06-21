@@ -1,0 +1,32 @@
+[package]
+name = "canyon-cli"
+version = "0.1.0"
+authors = ["Liu-Cheng Xu <xuliuchengxlc@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+anyhow = "1.0"
+async-std = { version = "1.6.2", features = ["attributes"] }
+async-trait = "0.1.49"
+codec = { package = "parity-scale-codec", version = "2.1", features = ["derive", "full"] }
+env_logger = "0.8.1"
+hex = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+structopt = "0.3"
+tokio = { version = "1.6", features = ["rt", "macros"] }
+
+subxt = { package = "substrate-subxt", git = "https://github.com/canyon-network/substrate-subxt", branch = "w3f-grant-1" }
+
+sc-cli = { git = "https://github.com/canyon-network/substrate", branch = "w3f-grant-1" }
+
+sp-authority-discovery = { git = "https://github.com/canyon-network/substrate", branch = "w3f-grant-1" }
+sp-consensus-babe = { git = "https://github.com/canyon-network/substrate", branch = "w3f-grant-1" }
+sp-core = { git = "https://github.com/canyon-network/substrate", branch = "w3f-grant-1" }
+sp-finality-grandpa = { git = "https://github.com/canyon-network/substrate", branch = "w3f-grant-1" }
+sp-keyring = { git = "https://github.com/canyon-network/substrate", branch = "w3f-grant-1" }
+sp-runtime = { git = "https://github.com/canyon-network/substrate", branch = "w3f-grant-1" }
+
+frame-support = { git = "https://github.com/canyon-network/substrate", branch = "w3f-grant-1" }
+pallet-indices = { git = "https://github.com/canyon-network/substrate", branch = "w3f-grant-1" }
+pallet-im-online = { git = "https://github.com/canyon-network/substrate", branch = "w3f-grant-1" }
