@@ -8,12 +8,12 @@ pub trait Permastore: Balances + System {}
 
 #[derive(Clone, Debug, PartialEq, Encode)]
 pub struct StoreCall<T: Permastore> {
-    /// Raw bytes of transaction data.
-    pub data: Vec<u8>,
     /// Byte size of `data`.
     pub data_size: u32,
     /// Merkle root of `data` in chunks.
     pub chunk_root: T::Hash,
+    /// Raw bytes of transaction data.
+    pub data: Vec<u8>,
     /// Runtime marker.
     pub _runtime: PhantomData<T>,
 }
