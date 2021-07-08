@@ -1,9 +1,11 @@
 use std::path::PathBuf;
 
 use anyhow::{anyhow, Result};
-use sp_core::Encode;
+use jsonrpsee_types::to_json_value;
+use sp_core::{Bytes, Encode, H256};
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use structopt::StructOpt;
+use subxt::RpcClient;
 
 use cp_permastore::CHUNK_SIZE;
 
@@ -15,8 +17,15 @@ use crate::{
 /// Permastore
 #[derive(Debug, StructOpt)]
 pub enum Permastore {
-    /// Store the data.
+    /// Send extrinsic for storing data.
     Store {
+        #[structopt(long)]
+        data: Option<String>,
+        #[structopt(short, long, parse(from_os_str), conflicts_with = "data")]
+        path: Option<PathBuf>,
+    },
+    /// Submit the transction data via RPC.
+    Submit {
         #[structopt(long)]
         data: Option<String>,
         #[structopt(short, long, parse(from_os_str), conflicts_with = "data")]
@@ -24,6 +33,7 @@ pub enum Permastore {
     },
 }
 
+/// Send `permastore::call` extrinsic.
 async fn store(client: &CanyonClient, signer: &CanyonSigner, data: Vec<u8>) -> Result<()> {
     let chunks = data
         .chunks(CHUNK_SIZE as usize)
@@ -42,21 +52,41 @@ async fn store(client: &CanyonClient, signer: &CanyonSigner, data: Vec<u8>) -> R
     Ok(())
 }
 
+/// Submit the transaction data asynchonously.
+async fn submit(rpc_client: &RpcClient, value: Bytes) -> Result<H256> {
+    let params = &[to_json_value(value)?];
+    let data = rpc_client.request("permastore_submit", params).await?;
+    Ok(data)
+}
+
 impl Permastore {
     pub async fn run(self, url: String, signer: CanyonSigner) -> Result<()> {
         let client = build_client(url).await?;
 
         match self {
             Self::Store { data, path } => {
-                if let Some(data) = data {
-                    let data = data.as_bytes().to_vec();
-                    store(&client, &signer, data).await?;
+                let raw_data = if let Some(data) = data {
+                    data.as_bytes().to_vec()
                 } else if let Some(path) = path {
-                    let data = std::fs::read(path)?;
-                    store(&client, &signer, data).await?;
+                    std::fs::read(path)?
                 } else {
                     return Err(anyhow!("--data or --path is required for store command"));
-                }
+                };
+
+                store(&client, &signer, raw_data).await?;
+            }
+            Self::Submit { data, path } => {
+                let raw_data = if let Some(data) = data {
+                    data.as_bytes().to_vec()
+                } else if let Some(path) = path {
+                    std::fs::read(path)?
+                } else {
+                    return Err(anyhow!("--data or --path is required for store command"));
+                };
+
+                let rpc_client = client.rpc_client();
+                let ret = submit(rpc_client, raw_data.into()).await?;
+                println!("Submitted result: {:?}", ret);
             }
         }
 

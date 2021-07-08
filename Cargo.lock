@@ -659,6 +659,7 @@ dependencies = [
  "env_logger",
  "frame-support",
  "hex",
+ "jsonrpsee-types",
  "pallet-im-online",
  "pallet-indices",
  "parity-scale-codec",
