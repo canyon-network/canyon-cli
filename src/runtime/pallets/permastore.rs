@@ -62,9 +62,9 @@ where
         let _runtime = core::marker::PhantomData::<T>;
         self.submit_with_data(
             StoreCall {
-                data: data.clone(),
                 data_size,
                 chunk_root,
+                data: data.clone(),
                 _runtime,
             },
             signer,
@@ -83,9 +83,9 @@ where
         let _runtime = core::marker::PhantomData::<T>;
         self.watch(
             StoreCall {
-                data,
                 data_size,
                 chunk_root,
+                data,
                 _runtime,
             },
             signer,
