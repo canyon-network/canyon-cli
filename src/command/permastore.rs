@@ -31,6 +31,13 @@ pub enum Permastore {
         #[structopt(short, long, parse(from_os_str), conflicts_with = "data")]
         path: Option<PathBuf>,
     },
+    /// Combine `Submit` and `Store`
+    SubmitAndStore {
+        #[structopt(long)]
+        data: Option<String>,
+        #[structopt(short, long, parse(from_os_str), conflicts_with = "data")]
+        path: Option<PathBuf>,
+    },
 }
 
 /// Send `permastore::call` extrinsic.
@@ -63,30 +70,35 @@ impl Permastore {
     pub async fn run(self, url: String, signer: CanyonSigner) -> Result<()> {
         let client = build_client(url).await?;
 
+        let read_data = |data: Option<String>, path: Option<PathBuf>| {
+            if let Some(data) = data {
+                Ok(data.as_bytes().to_vec())
+            } else if let Some(path) = path {
+                std::fs::read(path).map_err(Into::into)
+            } else {
+                Err(anyhow!("--data or --path is required for store command"))
+            }
+        };
+
         match self {
             Self::Store { data, path } => {
-                let raw_data = if let Some(data) = data {
-                    data.as_bytes().to_vec()
-                } else if let Some(path) = path {
-                    std::fs::read(path)?
-                } else {
-                    return Err(anyhow!("--data or --path is required for store command"));
-                };
-
+                let raw_data = read_data(data, path)?;
                 store(&client, &signer, raw_data).await?;
             }
             Self::Submit { data, path } => {
-                let raw_data = if let Some(data) = data {
-                    data.as_bytes().to_vec()
-                } else if let Some(path) = path {
-                    std::fs::read(path)?
-                } else {
-                    return Err(anyhow!("--data or --path is required for store command"));
-                };
-
+                let raw_data = read_data(data, path)?;
                 let rpc_client = client.rpc_client();
                 let ret = submit(rpc_client, raw_data.into()).await?;
                 println!("Submitted result: {:?}", ret);
+            }
+            Self::SubmitAndStore { data, path } => {
+                let raw_data = read_data(data.clone(), path.clone())?;
+                let rpc_client = client.rpc_client();
+                let ret = submit(rpc_client, raw_data.into()).await?;
+                println!("Submitted result: {:?}", ret);
+
+                let raw_data = read_data(data, path)?;
+                store(&client, &signer, raw_data).await?;
             }
         }
 
