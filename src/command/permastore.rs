@@ -48,13 +48,11 @@ async fn store(client: &CanyonClient, signer: &CanyonSigner, data: Vec<u8>) -> R
         .collect();
 
     let chunk_root = BlakeTwo256::ordered_trie_root(chunks);
-    println!("chunk root: {:?}", chunk_root);
-
     let data_size = data.len() as u32;
-    println!("data size: {:?}", data_size);
+    println!("data size: {:?}, chunk root: {:?}", data_size, chunk_root);
 
-    let result = client.store(signer, data_size, chunk_root, data).await?;
-    println!("Store result: {:?}", result);
+    let result = client.store(signer, data_size, chunk_root).await?;
+    println!("Stored result: {:?}", result);
 
     Ok(())
 }
