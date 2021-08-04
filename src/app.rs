@@ -1,7 +1,10 @@
 use anyhow::{anyhow, Result};
 use sp_core::Pair;
 use sp_keyring::AccountKeyring;
-use structopt::{clap::arg_enum, StructOpt};
+use structopt::{
+    clap::{arg_enum, AppSettings::ColoredHelp},
+    StructOpt,
+};
 use subxt::PairSigner;
 
 use crate::runtime::CanyonSigner;
@@ -44,7 +47,13 @@ impl Into<AccountKeyring> for BuiltinAccounts {
 }
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "canyon-cli", author, about, no_version)]
+#[structopt(
+    name = "canyon-cli",
+    author,
+    about,
+    no_version,
+    global_setting(ColoredHelp)
+)]
 pub struct App {
     /// Builtin test accounts.
     #[structopt(long, possible_values = &BuiltinAccounts::variants(), case_insensitive = true)]

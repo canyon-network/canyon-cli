@@ -17,7 +17,7 @@ use crate::{
 /// Permastore
 #[derive(Debug, StructOpt)]
 pub enum Permastore {
-    /// Send the `store` extrinsic.
+    /// Send the `store` extrinsic only.
     Store {
         #[structopt(long)]
         data: Option<String>,
@@ -31,8 +31,8 @@ pub enum Permastore {
         #[structopt(short, long, parse(from_os_str), conflicts_with = "data")]
         path: Option<PathBuf>,
     },
-    /// Combine `Submit` and `Store`
-    SubmitAndStore {
+    /// Submit the `store` extrinsic as well as the transaction data.
+    StoreWithData {
         #[structopt(long)]
         data: Option<String>,
         #[structopt(short, long, parse(from_os_str), conflicts_with = "data")]
@@ -109,7 +109,7 @@ impl Permastore {
                 let ret = permastore_rpc.submit(raw_data.into()).await?;
                 println!("Submitted result: {:?}", ret);
             }
-            Self::SubmitAndStore { data, path } => {
+            Self::StoreWithData { data, path } => {
                 let data = read_data(data, path)?;
 
                 let chunks = data
