@@ -57,11 +57,31 @@ async fn store(client: &CanyonClient, signer: &CanyonSigner, data: Vec<u8>) -> R
     Ok(())
 }
 
-/// Submit the transaction data asynchonously.
-async fn submit(rpc_client: &RpcClient, value: Bytes) -> Result<H256> {
-    let params = &[to_json_value(value)?];
-    let data = rpc_client.request("permastore_submit", params).await?;
-    Ok(data)
+struct PermastoreRpc<'a> {
+    rpc: &'a RpcClient,
+}
+
+impl<'a> PermastoreRpc<'a> {
+    pub fn new(rpc: &'a RpcClient) -> Self {
+        Self { rpc }
+    }
+
+    /// Submit the transaction data.
+    pub async fn submit(&self, value: Bytes) -> Result<H256> {
+        let params = &[to_json_value(value)?];
+        let data = self.rpc.request("permastore_submit", params).await?;
+        Ok(data)
+    }
+
+    /// Submit the `store` extrinsic as well as the transaction data.
+    async fn submit_extrinsic(&self, value: Bytes, data: Bytes) -> Result<H256> {
+        let params = &[to_json_value(value)?, to_json_value(data)?];
+        let data = self
+            .rpc
+            .request("permastore_submitExtrinsic", params)
+            .await?;
+        Ok(data)
+    }
 }
 
 impl Permastore {
@@ -85,18 +105,31 @@ impl Permastore {
             }
             Self::Submit { data, path } => {
                 let raw_data = read_data(data, path)?;
-                let rpc_client = client.rpc_client();
-                let ret = submit(rpc_client, raw_data.into()).await?;
+                let permastore_rpc = PermastoreRpc::new(client.rpc_client());
+                let ret = permastore_rpc.submit(raw_data.into()).await?;
                 println!("Submitted result: {:?}", ret);
             }
             Self::SubmitAndStore { data, path } => {
-                let raw_data = read_data(data.clone(), path.clone())?;
-                let rpc_client = client.rpc_client();
-                let ret = submit(rpc_client, raw_data.into()).await?;
-                println!("Submitted result: {:?}", ret);
+                let data = read_data(data, path)?;
 
-                let raw_data = read_data(data, path)?;
-                store(&client, &signer, raw_data).await?;
+                let chunks = data
+                    .chunks(CHUNK_SIZE as usize)
+                    .map(|c| BlakeTwo256::hash(c).encode())
+                    .collect();
+
+                let chunk_root = BlakeTwo256::ordered_trie_root(chunks);
+                let data_size = data.len() as u32;
+                println!("data size: {:?}, chunk root: {:?}", data_size, chunk_root);
+
+                let store_call =
+                    crate::runtime::pallets::permastore::StoreCall::new(data_size, chunk_root);
+                let uxt = client.create_signed(store_call, &signer).await?;
+
+                let permastore_rpc = PermastoreRpc::new(client.rpc_client());
+                let ret = permastore_rpc
+                    .submit_extrinsic(uxt.encode().into(), data.into())
+                    .await?;
+                println!("Submitted result: {:?}", ret);
             }
         }
 

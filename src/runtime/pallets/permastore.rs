@@ -15,3 +15,13 @@ pub struct StoreCall<T: Permastore> {
     /// Runtime marker.
     pub _runtime: PhantomData<T>,
 }
+
+impl<T: Permastore> StoreCall<T> {
+    pub fn new(data_size: u32, chunk_root: T::Hash) -> Self {
+        Self {
+            data_size,
+            chunk_root,
+            _runtime: PhantomData::<T>,
+        }
+    }
+}
