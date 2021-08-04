@@ -17,7 +17,7 @@ use crate::{
 /// Permastore
 #[derive(Debug, StructOpt)]
 pub enum Permastore {
-    /// Send extrinsic for storing data.
+    /// Send the `store` extrinsic.
     Store {
         #[structopt(long)]
         data: Option<String>,
