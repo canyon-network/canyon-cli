@@ -20,23 +20,29 @@ use crate::{
 pub enum Permastore {
     /// Send the `store` extrinsic only.
     Store {
-        #[structopt(long)]
+        /// Raw data to upload.
+        #[structopt(long, value_name = "DATA")]
         data: Option<String>,
-        #[structopt(short, long, parse(from_os_str), conflicts_with = "data")]
+        /// Absoluate path of the data file to upload.
+        #[structopt(long, value_name = "PATH", parse(from_os_str), conflicts_with = "data")]
         path: Option<PathBuf>,
     },
     /// Submit the transction data only.
     Submit {
-        #[structopt(long)]
+        /// Raw data to upload.
+        #[structopt(long, value_name = "DATA")]
         data: Option<String>,
-        #[structopt(short, long, parse(from_os_str), conflicts_with = "data")]
+        /// Absoluate path of the data file to upload.
+        #[structopt(long, value_name = "PATH", parse(from_os_str), conflicts_with = "data")]
         path: Option<PathBuf>,
     },
     /// Submit the `store` extrinsic and the transaction data.
     StoreWithData {
-        #[structopt(long)]
+        /// Raw data to upload.
+        #[structopt(long, value_name = "DATA")]
         data: Option<String>,
-        #[structopt(short, long, parse(from_os_str), conflicts_with = "data")]
+        /// Absoluate path of the data file to upload.
+        #[structopt(long, value_name = "PATH", parse(from_os_str), conflicts_with = "data")]
         path: Option<PathBuf>,
     },
 }
@@ -95,7 +101,9 @@ impl Permastore {
             } else if let Some(path) = path {
                 std::fs::read(path).map_err(Into::into)
             } else {
-                Err(anyhow!("--data or --path is required for store command"))
+                Err(anyhow!(
+                    "--data or --path is required, please rerun the command with `--help`."
+                ))
             }
         };
 
@@ -120,7 +128,8 @@ impl Permastore {
 
                 let chunk_root = BlakeTwo256::ordered_trie_root(chunks);
                 let data_size = data.len() as u32;
-                println!("data size: {:?}, chunk root: {:?}", data_size, chunk_root);
+                println!("data size in bytes: {:?}", data_size);
+                println!("        chunk root: {:?}", chunk_root);
 
                 let store_call = crate::pallets::permastore::StoreCall::new(data_size, chunk_root);
                 let uxt = client.create_signed(store_call, &signer).await?;
@@ -129,7 +138,7 @@ impl Permastore {
                 let ret = permastore_rpc
                     .submit_extrinsic(uxt.encode().into(), data.into())
                     .await?;
-                println!("Submitted result: {:?}", ret);
+                println!("  Submitted result: {:?}", ret);
             }
         }
 

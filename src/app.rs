@@ -14,6 +14,7 @@ pub enum Command {
     Balances(crate::command::balances::Balances),
     System(crate::command::system::System),
     Permastore(crate::command::permastore::Permastore),
+    /// Prints the relevant information of the provided Secret URI
     InspectKey,
 }
 
@@ -63,15 +64,15 @@ pub struct App {
     ///
     /// Maybe a secret seed, secret URI(with derivation paths and password), SS58 or public URI.
     /// You can also use an environment variable URI=[URI] for this purpose.
-    #[structopt(long)]
+    #[structopt(long, value_name = "URI")]
     pub uri: Option<String>,
 
     /// The websocket url of Canyon node.
-    #[structopt(long, default_value = "ws://127.0.0.1:9944")]
+    #[structopt(long, value_name = "URL", default_value = "ws://127.0.0.1:9944")]
     pub url: String,
 
     /// Ss58 Address version of the network.
-    #[structopt(long, default_value = "42")]
+    #[structopt(long, value_name = "SS58_PREFIX", default_value = "42")]
     pub ss58_prefix: sp_core::crypto::Ss58AddressFormat,
 
     #[structopt(subcommand)]
