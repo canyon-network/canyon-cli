@@ -10,7 +10,8 @@ use subxt::RpcClient;
 use cp_permastore::CHUNK_SIZE;
 
 use crate::{
-    pallets::permastore::StoreCallExt, runtime::{CanyonClient, CanyonSigner},
+    pallets::permastore::StoreCallExt,
+    runtime::{CanyonClient, CanyonSigner},
     utils::build_client,
 };
 
@@ -121,8 +122,7 @@ impl Permastore {
                 let data_size = data.len() as u32;
                 println!("data size: {:?}, chunk root: {:?}", data_size, chunk_root);
 
-                let store_call =
-                    crate::pallets::permastore::StoreCall::new(data_size, chunk_root);
+                let store_call = crate::pallets::permastore::StoreCall::new(data_size, chunk_root);
                 let uxt = client.create_signed(store_call, &signer).await?;
 
                 let permastore_rpc = PermastoreRpc::new(client.rpc_client());
