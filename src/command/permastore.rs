@@ -25,14 +25,14 @@ pub enum Permastore {
         #[structopt(short, long, parse(from_os_str), conflicts_with = "data")]
         path: Option<PathBuf>,
     },
-    /// Submit the transction data via RPC.
+    /// Submit the transction data only.
     Submit {
         #[structopt(long)]
         data: Option<String>,
         #[structopt(short, long, parse(from_os_str), conflicts_with = "data")]
         path: Option<PathBuf>,
     },
-    /// Submit the `store` extrinsic as well as the transaction data.
+    /// Submit the `store` extrinsic and the transaction data.
     StoreWithData {
         #[structopt(long)]
         data: Option<String>,

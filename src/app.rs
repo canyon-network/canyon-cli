@@ -79,7 +79,7 @@ pub struct App {
 }
 
 fn as_sr25519_signer(uri: &str) -> Result<CanyonSigner> {
-    sp_core::sr25519::Pair::from_phrase(&uri, None)
+    sp_core::sr25519::Pair::from_phrase(uri, None)
         .map(|(pair, _seed)| PairSigner::new(pair))
         .map_err(|err| anyhow!("Failed to generate sr25519 Pair from uri: {:?}", err))
 }
