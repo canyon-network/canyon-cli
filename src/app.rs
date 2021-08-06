@@ -1,7 +1,10 @@
 use anyhow::{anyhow, Result};
 use sp_core::Pair;
 use sp_keyring::AccountKeyring;
-use structopt::{clap::arg_enum, StructOpt};
+use structopt::{
+    clap::{arg_enum, AppSettings::ColoredHelp},
+    StructOpt,
+};
 use subxt::PairSigner;
 
 use crate::runtime::CanyonSigner;
@@ -11,6 +14,7 @@ pub enum Command {
     Balances(crate::command::balances::Balances),
     System(crate::command::system::System),
     Permastore(crate::command::permastore::Permastore),
+    /// Prints the relevant information of the provided Secret URI
     InspectKey,
 }
 
@@ -28,23 +32,29 @@ arg_enum! {
   }
 }
 
-impl Into<AccountKeyring> for BuiltinAccounts {
-    fn into(self) -> AccountKeyring {
-        match self {
-            Self::Alice => AccountKeyring::Alice,
-            Self::Bob => AccountKeyring::Bob,
-            Self::Charlie => AccountKeyring::Charlie,
-            Self::Dave => AccountKeyring::Dave,
-            Self::Eve => AccountKeyring::Eve,
-            Self::Ferdie => AccountKeyring::Ferdie,
-            Self::One => AccountKeyring::One,
-            Self::Two => AccountKeyring::Two,
+impl From<BuiltinAccounts> for AccountKeyring {
+    fn from(account: BuiltinAccounts) -> Self {
+        match account {
+            BuiltinAccounts::Alice => Self::Alice,
+            BuiltinAccounts::Bob => Self::Bob,
+            BuiltinAccounts::Charlie => Self::Charlie,
+            BuiltinAccounts::Dave => Self::Dave,
+            BuiltinAccounts::Eve => Self::Eve,
+            BuiltinAccounts::Ferdie => Self::Ferdie,
+            BuiltinAccounts::One => Self::One,
+            BuiltinAccounts::Two => Self::Two,
         }
     }
 }
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "canyon-cli", author, about, no_version)]
+#[structopt(
+    name = "canyon-cli",
+    author,
+    about,
+    no_version,
+    global_setting(ColoredHelp)
+)]
 pub struct App {
     /// Builtin test accounts.
     #[structopt(long, possible_values = &BuiltinAccounts::variants(), case_insensitive = true)]
@@ -54,15 +64,15 @@ pub struct App {
     ///
     /// Maybe a secret seed, secret URI(with derivation paths and password), SS58 or public URI.
     /// You can also use an environment variable URI=[URI] for this purpose.
-    #[structopt(long)]
+    #[structopt(long, value_name = "URI")]
     pub uri: Option<String>,
 
     /// The websocket url of Canyon node.
-    #[structopt(long, default_value = "ws://127.0.0.1:9944")]
+    #[structopt(long, value_name = "URL", default_value = "ws://127.0.0.1:9944")]
     pub url: String,
 
     /// Ss58 Address version of the network.
-    #[structopt(long, default_value = "42")]
+    #[structopt(long, value_name = "SS58_PREFIX", default_value = "42")]
     pub ss58_prefix: sp_core::crypto::Ss58AddressFormat,
 
     #[structopt(subcommand)]
@@ -70,7 +80,7 @@ pub struct App {
 }
 
 fn as_sr25519_signer(uri: &str) -> Result<CanyonSigner> {
-    sp_core::sr25519::Pair::from_phrase(&uri, None)
+    sp_core::sr25519::Pair::from_phrase(uri, None)
         .map(|(pair, _seed)| PairSigner::new(pair))
         .map_err(|err| anyhow!("Failed to generate sr25519 Pair from uri: {:?}", err))
 }

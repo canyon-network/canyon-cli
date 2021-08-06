@@ -10,32 +10,39 @@ use subxt::RpcClient;
 use cp_permastore::CHUNK_SIZE;
 
 use crate::{
-    runtime::{pallets::permastore::StoreCallExt, CanyonClient, CanyonSigner},
+    pallets::permastore::StoreCallExt,
+    runtime::{CanyonClient, CanyonSigner},
     utils::build_client,
 };
 
 /// Permastore
 #[derive(Debug, StructOpt)]
 pub enum Permastore {
-    /// Send extrinsic for storing data.
+    /// Send the `store` extrinsic only.
     Store {
-        #[structopt(long)]
+        /// Raw data to upload.
+        #[structopt(long, value_name = "DATA")]
         data: Option<String>,
-        #[structopt(short, long, parse(from_os_str), conflicts_with = "data")]
+        /// Absoluate path of the data file to upload.
+        #[structopt(long, value_name = "PATH", parse(from_os_str), conflicts_with = "data")]
         path: Option<PathBuf>,
     },
-    /// Submit the transction data via RPC.
+    /// Submit the transction data only.
     Submit {
-        #[structopt(long)]
+        /// Raw data to upload.
+        #[structopt(long, value_name = "DATA")]
         data: Option<String>,
-        #[structopt(short, long, parse(from_os_str), conflicts_with = "data")]
+        /// Absoluate path of the data file to upload.
+        #[structopt(long, value_name = "PATH", parse(from_os_str), conflicts_with = "data")]
         path: Option<PathBuf>,
     },
-    /// Combine `Submit` and `Store`
-    SubmitAndStore {
-        #[structopt(long)]
+    /// Submit the `store` extrinsic and the transaction data.
+    StoreWithData {
+        /// Raw data to upload.
+        #[structopt(long, value_name = "DATA")]
         data: Option<String>,
-        #[structopt(short, long, parse(from_os_str), conflicts_with = "data")]
+        /// Absoluate path of the data file to upload.
+        #[structopt(long, value_name = "PATH", parse(from_os_str), conflicts_with = "data")]
         path: Option<PathBuf>,
     },
 }
@@ -57,11 +64,31 @@ async fn store(client: &CanyonClient, signer: &CanyonSigner, data: Vec<u8>) -> R
     Ok(())
 }
 
-/// Submit the transaction data asynchonously.
-async fn submit(rpc_client: &RpcClient, value: Bytes) -> Result<H256> {
-    let params = &[to_json_value(value)?];
-    let data = rpc_client.request("permastore_submit", params).await?;
-    Ok(data)
+struct PermastoreRpc<'a> {
+    rpc: &'a RpcClient,
+}
+
+impl<'a> PermastoreRpc<'a> {
+    pub fn new(rpc: &'a RpcClient) -> Self {
+        Self { rpc }
+    }
+
+    /// Submit the transaction data.
+    pub async fn submit(&self, value: Bytes) -> Result<H256> {
+        let params = &[to_json_value(value)?];
+        let data = self.rpc.request("permastore_submit", params).await?;
+        Ok(data)
+    }
+
+    /// Submit the `store` extrinsic as well as the transaction data.
+    async fn submit_extrinsic(&self, value: Bytes, data: Bytes) -> Result<H256> {
+        let params = &[to_json_value(value)?, to_json_value(data)?];
+        let data = self
+            .rpc
+            .request("permastore_submitExtrinsic", params)
+            .await?;
+        Ok(data)
+    }
 }
 
 impl Permastore {
@@ -74,7 +101,9 @@ impl Permastore {
             } else if let Some(path) = path {
                 std::fs::read(path).map_err(Into::into)
             } else {
-                Err(anyhow!("--data or --path is required for store command"))
+                Err(anyhow!(
+                    "--data or --path is required, please rerun the command with `--help`."
+                ))
             }
         };
 
@@ -85,18 +114,31 @@ impl Permastore {
             }
             Self::Submit { data, path } => {
                 let raw_data = read_data(data, path)?;
-                let rpc_client = client.rpc_client();
-                let ret = submit(rpc_client, raw_data.into()).await?;
+                let permastore_rpc = PermastoreRpc::new(client.rpc_client());
+                let ret = permastore_rpc.submit(raw_data.into()).await?;
                 println!("Submitted result: {:?}", ret);
             }
-            Self::SubmitAndStore { data, path } => {
-                let raw_data = read_data(data.clone(), path.clone())?;
-                let rpc_client = client.rpc_client();
-                let ret = submit(rpc_client, raw_data.into()).await?;
-                println!("Submitted result: {:?}", ret);
+            Self::StoreWithData { data, path } => {
+                let data = read_data(data, path)?;
 
-                let raw_data = read_data(data, path)?;
-                store(&client, &signer, raw_data).await?;
+                let chunks = data
+                    .chunks(CHUNK_SIZE as usize)
+                    .map(|c| BlakeTwo256::hash(c).encode())
+                    .collect();
+
+                let chunk_root = BlakeTwo256::ordered_trie_root(chunks);
+                let data_size = data.len() as u32;
+                println!("data size in bytes: {:?}", data_size);
+                println!("        chunk root: {:?}", chunk_root);
+
+                let store_call = crate::pallets::permastore::StoreCall::new(data_size, chunk_root);
+                let uxt = client.create_signed(store_call, &signer).await?;
+
+                let permastore_rpc = PermastoreRpc::new(client.rpc_client());
+                let ret = permastore_rpc
+                    .submit_extrinsic(uxt.encode().into(), data.into())
+                    .await?;
+                println!("  Submitted result: {:?}", ret);
             }
         }
 

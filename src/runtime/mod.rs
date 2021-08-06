@@ -1,4 +1,3 @@
-pub mod pallets;
 pub mod primitives;
 
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
@@ -17,7 +16,6 @@ use subxt::{
     Client, EventTypeRegistry, PairSigner, Runtime,
 };
 
-use self::pallets::permastore::Permastore;
 use self::primitives::*;
 
 /// Concrete type definitions for Canyon.
@@ -102,7 +100,7 @@ impl Session for CanyonRuntime {
     type Keys = BasicSessionKeys;
 }
 
-impl Permastore for CanyonRuntime {}
+impl crate::pallets::permastore::Permastore for CanyonRuntime {}
 
 /// Canyon `Client` for Canyon runtime.
 pub type CanyonClient = Client<CanyonRuntime>;

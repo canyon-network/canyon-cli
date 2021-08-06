@@ -1,5 +1,6 @@
 pub mod app;
 pub mod command;
+pub mod pallets;
 pub mod runtime;
 pub mod utils;
 
