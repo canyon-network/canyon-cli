@@ -43,7 +43,7 @@ impl SharedParams {
 /// Permastore
 #[derive(Debug, StructOpt)]
 pub enum Permastore {
-    /// Send the `store` extrinsic only.
+    /// Submit the `store` extrinsic only.
     Store {
         #[structopt(flatten)]
         shared: SharedParams,
