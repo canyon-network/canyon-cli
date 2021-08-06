@@ -15,35 +15,48 @@ use crate::{
     utils::build_client,
 };
 
+#[derive(Debug, StructOpt)]
+pub struct SharedParams {
+    /// Raw data to upload.
+    #[structopt(long, value_name = "DATA")]
+    data: Option<String>,
+
+    /// Absoluate path of the data file to upload.
+    #[structopt(long, value_name = "PATH", parse(from_os_str), conflicts_with = "data")]
+    path: Option<PathBuf>,
+}
+
+impl SharedParams {
+    pub fn read_data(&self) -> Result<Vec<u8>> {
+        if let Some(ref data) = self.data {
+            Ok(data.as_bytes().to_vec())
+        } else if let Some(ref path) = self.path {
+            std::fs::read(path).map_err(Into::into)
+        } else {
+            Err(anyhow!(
+                "--data or --path is required, please rerun the command with `--help`."
+            ))
+        }
+    }
+}
+
 /// Permastore
 #[derive(Debug, StructOpt)]
 pub enum Permastore {
-    /// Send the `store` extrinsic only.
+    /// Submit the `store` extrinsic only.
     Store {
-        /// Raw data to upload.
-        #[structopt(long, value_name = "DATA")]
-        data: Option<String>,
-        /// Absoluate path of the data file to upload.
-        #[structopt(long, value_name = "PATH", parse(from_os_str), conflicts_with = "data")]
-        path: Option<PathBuf>,
+        #[structopt(flatten)]
+        shared: SharedParams,
     },
     /// Submit the transction data only.
     Submit {
-        /// Raw data to upload.
-        #[structopt(long, value_name = "DATA")]
-        data: Option<String>,
-        /// Absoluate path of the data file to upload.
-        #[structopt(long, value_name = "PATH", parse(from_os_str), conflicts_with = "data")]
-        path: Option<PathBuf>,
+        #[structopt(flatten)]
+        shared: SharedParams,
     },
     /// Submit the `store` extrinsic and the transaction data.
     StoreWithData {
-        /// Raw data to upload.
-        #[structopt(long, value_name = "DATA")]
-        data: Option<String>,
-        /// Absoluate path of the data file to upload.
-        #[structopt(long, value_name = "PATH", parse(from_os_str), conflicts_with = "data")]
-        path: Option<PathBuf>,
+        #[structopt(flatten)]
+        shared: SharedParams,
     },
 }
 
@@ -95,31 +108,19 @@ impl Permastore {
     pub async fn run(self, url: String, signer: CanyonSigner) -> Result<()> {
         let client = build_client(url).await?;
 
-        let read_data = |data: Option<String>, path: Option<PathBuf>| {
-            if let Some(data) = data {
-                Ok(data.as_bytes().to_vec())
-            } else if let Some(path) = path {
-                std::fs::read(path).map_err(Into::into)
-            } else {
-                Err(anyhow!(
-                    "--data or --path is required, please rerun the command with `--help`."
-                ))
-            }
-        };
-
         match self {
-            Self::Store { data, path } => {
-                let raw_data = read_data(data, path)?;
+            Self::Store { shared } => {
+                let raw_data = shared.read_data()?;
                 store(&client, &signer, raw_data).await?;
             }
-            Self::Submit { data, path } => {
-                let raw_data = read_data(data, path)?;
+            Self::Submit { shared } => {
+                let raw_data = shared.read_data()?;
                 let permastore_rpc = PermastoreRpc::new(client.rpc_client());
                 let ret = permastore_rpc.submit(raw_data.into()).await?;
                 println!("Submitted result: {:?}", ret);
             }
-            Self::StoreWithData { data, path } => {
-                let data = read_data(data, path)?;
+            Self::StoreWithData { shared } => {
+                let data = shared.read_data()?;
 
                 let chunks = data
                     .chunks(CHUNK_SIZE as usize)
