@@ -140,10 +140,7 @@ impl CanyonClient {
         Ok(subscription)
     }
 
-    /// Subscribe to System Events that are imported into blocks.
-    ///
-    /// *WARNING* these may not be included in the finalized chain, use
-    /// `subscribe_finalized_events` to ensure events are finalized.
+    /// Subscribe to Poa HistoryDepth.
     pub async fn subscribe_poa_history_depth(
         &self,
         who: &AccountId,
