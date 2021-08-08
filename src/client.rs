@@ -110,11 +110,7 @@ impl CanyonClient {
     }
 
     //// Poa
-    /// Subscribe to System Events that are imported into blocks.
-    ///
-    /// *WARNING* these may not be included in the finalized chain, use
-    /// `subscribe_finalized_events` to ensure events are finalized.
-    pub async fn subscribe_poa_history_depth(
+    async fn watch_poa_history_depth(
         &self,
         who: &AccountId,
     ) -> Result<Subscription<StorageChangeSet<Hash>>> {
@@ -125,10 +121,23 @@ impl CanyonClient {
 
         let params = &[to_json_value(keys)?];
 
-        let mut subscription = self
+        let subscription = self
             .rpc_client()
             .subscribe("state_subscribeStorage", params, "state_unsubscribeStorage")
             .await?;
+
+        Ok(subscription)
+    }
+
+    /// Subscribe to System Events that are imported into blocks.
+    ///
+    /// *WARNING* these may not be included in the finalized chain, use
+    /// `subscribe_finalized_events` to ensure events are finalized.
+    pub async fn subscribe_poa_history_depth(
+        &self,
+        who: &AccountId,
+    ) -> Result<Subscription<StorageChangeSet<Hash>>> {
+        let mut subscription = self.watch_poa_history_depth(who).await?;
 
         while let Ok(Some(StorageChangeSet { block, changes })) = subscription.next().await {
             if !changes.is_empty() {
@@ -143,7 +152,6 @@ impl CanyonClient {
                         .await?
                         .map(|chain_block| *chain_block.block.header().number())
                         .unwrap_or_default();
-                    println!("number: {:?}", number);
                     println!(
                         "block #{}: {}, new_depth_info: {:?}, estimated storage ratio: {}",
                         number,
