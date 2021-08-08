@@ -6,6 +6,7 @@ use subxt::{balances::Balances, module, system::System, Call};
 #[module]
 pub trait Permastore: Balances + System {}
 
+/// Store the data onto the network.
 #[derive(Clone, Debug, PartialEq, Encode, Call)]
 pub struct StoreCall<T: Permastore> {
     /// Byte size of `data`.

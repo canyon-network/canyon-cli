@@ -5,11 +5,12 @@ use structopt::StructOpt;
 use subxt::system::{AccountStoreExt, SetCodeWithoutChecksCallExt};
 
 use crate::{
+    client::CanyonClient,
     runtime::{
         primitives::{AccountId, BlockNumber},
         CanyonSigner,
     },
-    utils::{block_hash, build_client, parse_account, read_code},
+    utils::{parse_account, read_code},
 };
 
 /// System
@@ -32,16 +33,17 @@ pub enum System {
 
 impl System {
     pub async fn run(self, url: String, signer: CanyonSigner) -> Result<()> {
-        let client = build_client(url).await?;
+        let client = CanyonClient::create(url).await?;
 
         match self {
             Self::AccountInfo { who, block_number } => {
-                let at = block_hash(&client, block_number).await?;
-                let account_info = client.account(&who, at).await?;
+                let at = client.block_hash(block_number).await?;
+                let account_info = client.0.account(&who, at).await?;
                 println!("AccountInfo of {:?}: {:#?}", who, account_info);
             }
             Self::SetCodeWithoutChecks { code } => {
                 let result = client
+                    .0
                     .set_code_without_checks_and_watch(&signer, &read_code(code)?)
                     .await?;
                 println!("set_code_without_checks result:{:#?}", result);

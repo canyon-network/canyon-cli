@@ -6,7 +6,7 @@ use subxt::{module, system::System, Store};
 #[module]
 pub trait Poa: System {}
 
-/// The total issuance of the balances module.
+/// The history depth of the poa module.
 #[derive(Clone, Debug, Eq, PartialEq, Store, Encode)]
 pub struct HistoryDepthStore<'a, T: System> {
     #[store(returns = DepthInfo<T::BlockNumber>)]

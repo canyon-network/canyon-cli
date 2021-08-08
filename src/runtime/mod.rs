@@ -13,7 +13,7 @@ use subxt::{
     session::{Session, SessionEventTypeRegistry},
     sudo::{Sudo, SudoEventTypeRegistry},
     system::{System, SystemEventTypeRegistry},
-    Client, EventTypeRegistry, PairSigner, Runtime,
+    EventTypeRegistry, PairSigner, Runtime,
 };
 
 use self::primitives::*;
@@ -101,9 +101,6 @@ impl Session for CanyonRuntime {
 }
 
 impl crate::pallets::permastore::Permastore for CanyonRuntime {}
-
-/// Canyon `Client` for Canyon runtime.
-pub type CanyonClient = Client<CanyonRuntime>;
 
 /// Canyon `Pair` for Canyon runtime.
 pub type CanyonPair = sr25519::Pair;

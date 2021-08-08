@@ -9,11 +9,8 @@ use subxt::RpcClient;
 
 use cp_permastore::CHUNK_SIZE;
 
-use crate::{
-    pallets::permastore::StoreCallExt,
-    runtime::{primitives::Hash, CanyonClient, CanyonSigner},
-    utils::build_client,
-};
+use crate::client::CanyonClient;
+use crate::runtime::{primitives::Hash, CanyonSigner};
 
 #[derive(Debug, StructOpt)]
 pub struct SharedParams {
@@ -72,23 +69,6 @@ pub enum Permastore {
     },
 }
 
-/// Send `permastore::call` extrinsic.
-async fn store(client: &CanyonClient, signer: &CanyonSigner, data: Vec<u8>) -> Result<()> {
-    let chunks = data
-        .chunks(CHUNK_SIZE as usize)
-        .map(|c| BlakeTwo256::hash(c).encode())
-        .collect();
-
-    let chunk_root = BlakeTwo256::ordered_trie_root(chunks);
-    let data_size = data.len() as u32;
-    println!("data size: {:?}, chunk root: {:?}", data_size, chunk_root);
-
-    let result = client.store(signer, data_size, chunk_root).await?;
-    println!("Stored result: {:?}", result);
-
-    Ok(())
-}
-
 pub fn final_storage_prefix(pallet_prefix: &str, storage_prefix: &str) -> Vec<u8> {
     let mut final_prefix = twox_128(pallet_prefix.as_bytes()).to_vec();
     final_prefix.extend_from_slice(&twox_128(storage_prefix.as_bytes()));
@@ -131,7 +111,7 @@ impl<'a> PermastoreRpc<'a> {
 
 impl Permastore {
     pub async fn run(self, url: String, signer: CanyonSigner) -> Result<()> {
-        let client = build_client(url).await?;
+        let client = CanyonClient::create(url).await?;
 
         let process_data = |data: &[u8]| {
             let chunks = data
@@ -147,7 +127,7 @@ impl Permastore {
         match self {
             Self::Store { shared } => {
                 let raw_data = shared.read_data()?;
-                store(&client, &signer, raw_data).await?;
+                client.store(&signer, raw_data).await?;
             }
             Self::Submit { shared, dry_run } => {
                 let raw_data = shared.read_data()?;
@@ -171,7 +151,7 @@ impl Permastore {
                 if !dry_run {
                     let store_call =
                         crate::pallets::permastore::StoreCall::new(data_size, chunk_root);
-                    let uxt = client.create_signed(store_call, &signer).await?;
+                    let uxt = client.0.create_signed(store_call, &signer).await?;
 
                     let permastore_rpc = PermastoreRpc::new(client.rpc_client());
                     let ret = permastore_rpc

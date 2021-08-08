@@ -9,12 +9,13 @@ use sp_core::storage::StorageChangeSet;
 use sp_runtime::traits::{Block as BlockT, Header as HeaderT};
 
 use crate::{
+    client::CanyonClient,
     pallets::poa::{HistoryDepthStore, HistoryDepthStoreExt},
     runtime::{
         primitives::{AccountId, BlockNumber, Hash},
-        CanyonClient, CanyonRuntime, CanyonSigner,
+        CanyonRuntime, CanyonSigner,
     },
-    utils::{block_hash, build_client, parse_account},
+    utils::parse_account,
 };
 
 /// Poa
@@ -78,6 +79,7 @@ impl<'a> PoaRpc<'a> {
                     let new_depth_info: DepthInfo<BlockNumber> =
                         Decode::decode(&mut data.0.as_slice())?;
                     let number = client
+                        .0
                         .block(Some(block))
                         .await?
                         .map(|chain_block| *chain_block.block.header().number())
@@ -106,7 +108,7 @@ fn display_storage_ratio(depth_info: &DepthInfo<BlockNumber>) -> String {
 
 impl Poa {
     pub async fn run(self, url: String, _signer: CanyonSigner) -> Result<()> {
-        let client = build_client(url).await?;
+        let client = CanyonClient::create(url).await?;
 
         match self {
             Self::Storage(storage) => match storage {
@@ -119,11 +121,11 @@ impl Poa {
                         let poa_rpc = PoaRpc::new(client.rpc_client());
                         poa_rpc.subscribe_history_depth(&who, &client).await?;
                     } else {
-                        let at = block_hash(&client, block_number).await?;
+                        let at = client.block_hash(block_number).await?;
                         let key = HistoryDepthStore::<CanyonRuntime> { account_id: &who }
                             .key(client.metadata());
                         println!("key: {:?}", key);
-                        let depth_info = client.history_depth(&who, at).await?;
+                        let depth_info = client.0.history_depth(&who, at).await?;
                         println!("{:?}: {:#?}", who, depth_info);
                         println!(
                             "Estimated storage ratio: {:?}",

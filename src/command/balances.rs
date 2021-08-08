@@ -3,11 +3,12 @@ use structopt::StructOpt;
 use subxt::balances::{LocksStoreExt, TransferCallExt, TransferEventExt};
 
 use crate::{
+    client::CanyonClient,
     runtime::{
         primitives::{AccountId, BlockNumber},
         CanyonSigner,
     },
-    utils::{block_hash, build_client, parse_account},
+    utils::parse_account,
 };
 
 /// Balances
@@ -39,11 +40,12 @@ pub enum Storage {
 
 impl Balances {
     pub async fn run(self, url: String, signer: CanyonSigner) -> Result<()> {
-        let client = build_client(url).await?;
+        let client = CanyonClient::create(url).await?;
 
         match self {
             Balances::Transfer { dest, value } => {
                 let result = client
+                    .0
                     .transfer_and_watch(&signer, &dest.into(), value)
                     .await?;
                 if let Some(event) = result.transfer()? {
@@ -54,8 +56,8 @@ impl Balances {
             }
             Balances::Storage(storage) => match storage {
                 Storage::Locks { who, block_number } => {
-                    let at = block_hash(&client, block_number).await?;
-                    let locks = client.locks(&who, at).await?;
+                    let at = client.block_hash(block_number).await?;
+                    let locks = client.0.locks(&who, at).await?;
                     println!("{:?}: {:#?}", who, locks);
                 }
             },
