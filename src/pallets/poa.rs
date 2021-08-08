@@ -1,7 +1,7 @@
-use pallet_poa::DepthInfo;
-
 use codec::Encode;
 use subxt::{module, system::System, Store};
+
+use pallet_poa::DepthInfo;
 
 #[module]
 pub trait Poa: System {}

@@ -1,11 +1,5 @@
 pub mod primitives;
 
-use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
-use sp_authority_discovery::AuthorityId as AuthorityDiscoveryId;
-use sp_consensus_babe::AuthorityId as BabeId;
-use sp_core::sr25519;
-use sp_finality_grandpa::AuthorityId as GrandpaId;
-use sp_runtime::{generic::Header, impl_opaque_keys, OpaqueExtrinsic};
 use subxt::{
     balances::{AccountData, Balances, BalancesEventTypeRegistry},
     extrinsic::DefaultExtra,
@@ -15,6 +9,13 @@ use subxt::{
     system::{System, SystemEventTypeRegistry},
     EventTypeRegistry, PairSigner, Runtime,
 };
+
+use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
+use sp_authority_discovery::AuthorityId as AuthorityDiscoveryId;
+use sp_consensus_babe::AuthorityId as BabeId;
+use sp_core::sr25519;
+use sp_finality_grandpa::AuthorityId as GrandpaId;
+use sp_runtime::{generic::Header, impl_opaque_keys, OpaqueExtrinsic};
 
 use self::primitives::*;
 
@@ -100,7 +101,9 @@ impl Session for CanyonRuntime {
     type Keys = BasicSessionKeys;
 }
 
+// Canyon pallets
 impl crate::pallets::permastore::Permastore for CanyonRuntime {}
+impl crate::pallets::poa::Poa for CanyonRuntime {}
 
 /// Canyon `Pair` for Canyon runtime.
 pub type CanyonPair = sr25519::Pair;

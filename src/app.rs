@@ -1,11 +1,12 @@
 use anyhow::{anyhow, Result};
-use sp_core::Pair;
-use sp_keyring::AccountKeyring;
 use structopt::{
     clap::{arg_enum, AppSettings::ColoredHelp},
     StructOpt,
 };
 use subxt::PairSigner;
+
+use sp_core::Pair;
+use sp_keyring::AccountKeyring;
 
 use crate::runtime::CanyonSigner;
 
@@ -20,17 +21,18 @@ pub enum Command {
 }
 
 arg_enum! {
-  #[derive(Clone, Debug)]
-  pub enum BuiltinAccounts {
-      Alice,
-      Bob,
-      Charlie,
-      Dave,
-      Eve,
-      Ferdie,
-      One,
-      Two,
-  }
+    /// Set of test accounts.
+    #[derive(Clone, Debug)]
+    pub enum BuiltinAccounts {
+        Alice,
+        Bob,
+        Charlie,
+        Dave,
+        Eve,
+        Ferdie,
+        One,
+        Two,
+    }
 }
 
 impl From<BuiltinAccounts> for AccountKeyring {
@@ -46,6 +48,12 @@ impl From<BuiltinAccounts> for AccountKeyring {
             BuiltinAccounts::Two => Self::Two,
         }
     }
+}
+
+fn as_sr25519_signer(uri: &str) -> Result<CanyonSigner> {
+    sp_core::sr25519::Pair::from_phrase(uri, None)
+        .map(|(pair, _seed)| PairSigner::new(pair))
+        .map_err(|err| anyhow!("Failed to generate sr25519 Pair from uri: {:?}", err))
 }
 
 #[derive(StructOpt, Debug)]
@@ -78,12 +86,6 @@ pub struct App {
 
     #[structopt(subcommand)]
     pub command: Command,
-}
-
-fn as_sr25519_signer(uri: &str) -> Result<CanyonSigner> {
-    sp_core::sr25519::Pair::from_phrase(uri, None)
-        .map(|(pair, _seed)| PairSigner::new(pair))
-        .map_err(|err| anyhow!("Failed to generate sr25519 Pair from uri: {:?}", err))
 }
 
 impl App {

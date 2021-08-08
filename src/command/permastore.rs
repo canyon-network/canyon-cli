@@ -22,6 +22,7 @@ pub struct SharedParams {
 }
 
 impl SharedParams {
+    /// Returns the raw bytes of transaction data.
     pub fn read_data(&self) -> Result<Vec<u8>> {
         if let Some(ref data) = self.data {
             Ok(data.as_bytes().to_vec())
@@ -119,22 +120,20 @@ impl Permastore {
                     let ret = client
                         .permastore_submit_extrinsic(uxt.encode().into(), raw_data.into())
                         .await?;
-                    println!("  Submitted result: {:?}", ret);
+                    println!("Submitted result: {:?}", ret);
                 }
             }
             Self::Remove { chunk_root } => {
                 let mut bytes = [0u8; 32];
-                hex::decode_to_slice(
-                    if let Some(s) = chunk_root.strip_prefix("0x") {
-                        s
-                    } else {
-                        &chunk_root
-                    },
-                    &mut bytes as &mut [u8],
-                )?;
+                let chunk_root = if let Some(stripped) = chunk_root.strip_prefix("0x") {
+                    stripped
+                } else {
+                    &chunk_root
+                };
+                hex::decode_to_slice(chunk_root, &mut bytes as &mut [u8])?;
 
                 let ret = client.permastore_remove_data(bytes.into()).await?;
-                println!("  Submitted result: {:?}", ret);
+                println!("Result of removing data: {:?}", ret);
             }
         }
 

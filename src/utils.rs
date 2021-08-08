@@ -1,12 +1,14 @@
 use std::{fs::File, io::Read, path::Path};
 
 use anyhow::{anyhow, Result};
+
 use sp_core::crypto::{Pair, Public, Ss58Codec};
 use sp_keyring::AccountKeyring;
 use sp_runtime::traits::{IdentifyAccount, Verify};
 
 use crate::runtime::primitives::{AccountId, Signature};
 
+/// Returns all bytes of `code_path`.
 pub fn read_code<P: AsRef<Path>>(code_path: P) -> Result<Vec<u8>> {
     let mut file = File::open(code_path)?;
     let mut data = Vec::new();

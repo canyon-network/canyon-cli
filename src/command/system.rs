@@ -18,8 +18,10 @@ use crate::{
 pub enum System {
     /// Get the account information.
     AccountInfo {
+        /// Account.
         #[structopt(index = 1, long, parse(try_from_str = parse_account))]
         who: AccountId,
+        /// Specify the block number for retrieving the state.
         #[structopt(long)]
         block_number: Option<BlockNumber>,
     },
