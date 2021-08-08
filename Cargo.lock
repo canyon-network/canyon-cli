@@ -669,6 +669,7 @@ dependencies = [
  "jsonrpsee-types",
  "pallet-im-online",
  "pallet-indices",
+ "pallet-poa",
  "parity-scale-codec",
  "sc-cli",
  "serde",
@@ -682,6 +683,19 @@ dependencies = [
  "structopt",
  "substrate-subxt",
  "tokio 1.9.0",
+]
+
+[[package]]
+name = "canyon-primitives"
+version = "0.1.0"
+source = "git+https://github.com/canyon-network/canyon?branch=remove-data-rpc#423f9e8337912743dbb8d1def4f8f782e4571882"
+dependencies = [
+ "frame-system",
+ "parity-scale-codec",
+ "sp-application-crypto",
+ "sp-core",
+ "sp-inherents",
+ "sp-runtime",
 ]
 
 [[package]]
@@ -839,9 +853,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ea221b5284a47e40033bf9b66f35f984ec0ea2931eb03505246cd27a963f981b"
 
 [[package]]
+name = "cp-consensus-poa"
+version = "0.1.0"
+source = "git+https://github.com/canyon-network/canyon?branch=remove-data-rpc#423f9e8337912743dbb8d1def4f8f782e4571882"
+dependencies = [
+ "parity-scale-codec",
+ "serde",
+ "sp-api",
+ "sp-core",
+ "sp-inherents",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "sp-trie",
+]
+
+[[package]]
 name = "cp-permastore"
 version = "0.1.0"
-source = "git+https://github.com/canyon-network/canyon?branch=master#ded08ed3261de71eb444644c5ea6fb62f59db267"
+source = "git+https://github.com/canyon-network/canyon?branch=remove-data-rpc#423f9e8337912743dbb8d1def4f8f782e4571882"
 dependencies = [
  "parity-scale-codec",
  "sp-api",
@@ -3561,6 +3591,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-poa"
+version = "0.1.0"
+source = "git+https://github.com/canyon-network/canyon?branch=remove-data-rpc#423f9e8337912743dbb8d1def4f8f782e4571882"
+dependencies = [
+ "canyon-primitives",
+ "cp-consensus-poa",
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "serde",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-session"
 version = "4.0.0-dev"
 source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
@@ -5649,7 +5696,7 @@ dependencies = [
 [[package]]
 name = "sp-api"
 version = "4.0.0-dev"
-source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
+source = "git+https://github.com/canyon-network/substrate?branch=canyon#046ae386043650ae388e387243881bd57d1cf75a"
 dependencies = [
  "hash-db",
  "log",
@@ -5666,7 +5713,7 @@ dependencies = [
 [[package]]
 name = "sp-api-proc-macro"
 version = "4.0.0-dev"
-source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
+source = "git+https://github.com/canyon-network/substrate?branch=canyon#046ae386043650ae388e387243881bd57d1cf75a"
 dependencies = [
  "blake2-rfc",
  "proc-macro-crate 1.0.0",
@@ -5678,7 +5725,7 @@ dependencies = [
 [[package]]
 name = "sp-application-crypto"
 version = "4.0.0-dev"
-source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
+source = "git+https://github.com/canyon-network/substrate?branch=canyon#046ae386043650ae388e387243881bd57d1cf75a"
 dependencies = [
  "parity-scale-codec",
  "serde",
@@ -5690,7 +5737,7 @@ dependencies = [
 [[package]]
 name = "sp-arithmetic"
 version = "4.0.0-dev"
-source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
+source = "git+https://github.com/canyon-network/substrate?branch=canyon#046ae386043650ae388e387243881bd57d1cf75a"
 dependencies = [
  "integer-sqrt",
  "num-traits",
@@ -5828,7 +5875,7 @@ dependencies = [
 [[package]]
 name = "sp-core"
 version = "4.0.0-dev"
-source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
+source = "git+https://github.com/canyon-network/substrate?branch=canyon#046ae386043650ae388e387243881bd57d1cf75a"
 dependencies = [
  "base58",
  "blake2-rfc",
@@ -5881,7 +5928,7 @@ dependencies = [
 [[package]]
 name = "sp-debug-derive"
 version = "3.0.0"
-source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
+source = "git+https://github.com/canyon-network/substrate?branch=canyon#046ae386043650ae388e387243881bd57d1cf75a"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5891,7 +5938,7 @@ dependencies = [
 [[package]]
 name = "sp-externalities"
 version = "0.10.0-dev"
-source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
+source = "git+https://github.com/canyon-network/substrate?branch=canyon#046ae386043650ae388e387243881bd57d1cf75a"
 dependencies = [
  "environmental",
  "parity-scale-codec",
@@ -5933,7 +5980,7 @@ dependencies = [
 [[package]]
 name = "sp-io"
 version = "4.0.0-dev"
-source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
+source = "git+https://github.com/canyon-network/substrate?branch=canyon#046ae386043650ae388e387243881bd57d1cf75a"
 dependencies = [
  "futures 0.3.16",
  "hash-db",
@@ -5969,7 +6016,7 @@ dependencies = [
 [[package]]
 name = "sp-keystore"
 version = "0.10.0-dev"
-source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
+source = "git+https://github.com/canyon-network/substrate?branch=canyon#046ae386043650ae388e387243881bd57d1cf75a"
 dependencies = [
  "async-trait",
  "derive_more",
@@ -5986,7 +6033,7 @@ dependencies = [
 [[package]]
 name = "sp-maybe-compressed-blob"
 version = "4.0.0-dev"
-source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
+source = "git+https://github.com/canyon-network/substrate?branch=canyon#046ae386043650ae388e387243881bd57d1cf75a"
 dependencies = [
  "ruzstd",
  "zstd",
@@ -6029,7 +6076,7 @@ dependencies = [
 [[package]]
 name = "sp-panic-handler"
 version = "3.0.0"
-source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
+source = "git+https://github.com/canyon-network/substrate?branch=canyon#046ae386043650ae388e387243881bd57d1cf75a"
 dependencies = [
  "backtrace",
 ]
@@ -6048,7 +6095,7 @@ dependencies = [
 [[package]]
 name = "sp-runtime"
 version = "4.0.0-dev"
-source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
+source = "git+https://github.com/canyon-network/substrate?branch=canyon#046ae386043650ae388e387243881bd57d1cf75a"
 dependencies = [
  "either",
  "hash256-std-hasher",
@@ -6069,7 +6116,7 @@ dependencies = [
 [[package]]
 name = "sp-runtime-interface"
 version = "4.0.0-dev"
-source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
+source = "git+https://github.com/canyon-network/substrate?branch=canyon#046ae386043650ae388e387243881bd57d1cf75a"
 dependencies = [
  "impl-trait-for-tuples",
  "parity-scale-codec",
@@ -6086,7 +6133,7 @@ dependencies = [
 [[package]]
 name = "sp-runtime-interface-proc-macro"
 version = "4.0.0-dev"
-source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
+source = "git+https://github.com/canyon-network/substrate?branch=canyon#046ae386043650ae388e387243881bd57d1cf75a"
 dependencies = [
  "Inflector",
  "proc-macro-crate 1.0.0",
@@ -6130,7 +6177,7 @@ dependencies = [
 [[package]]
 name = "sp-state-machine"
 version = "0.10.0-dev"
-source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
+source = "git+https://github.com/canyon-network/substrate?branch=canyon#046ae386043650ae388e387243881bd57d1cf75a"
 dependencies = [
  "hash-db",
  "log",
@@ -6153,12 +6200,12 @@ dependencies = [
 [[package]]
 name = "sp-std"
 version = "4.0.0-dev"
-source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
+source = "git+https://github.com/canyon-network/substrate?branch=canyon#046ae386043650ae388e387243881bd57d1cf75a"
 
 [[package]]
 name = "sp-storage"
 version = "4.0.0-dev"
-source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
+source = "git+https://github.com/canyon-network/substrate?branch=canyon#046ae386043650ae388e387243881bd57d1cf75a"
 dependencies = [
  "impl-serde",
  "parity-scale-codec",
@@ -6201,7 +6248,7 @@ dependencies = [
 [[package]]
 name = "sp-tracing"
 version = "4.0.0-dev"
-source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
+source = "git+https://github.com/canyon-network/substrate?branch=canyon#046ae386043650ae388e387243881bd57d1cf75a"
 dependencies = [
  "erased-serde",
  "log",
@@ -6243,7 +6290,7 @@ dependencies = [
 [[package]]
 name = "sp-trie"
 version = "4.0.0-dev"
-source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
+source = "git+https://github.com/canyon-network/substrate?branch=canyon#046ae386043650ae388e387243881bd57d1cf75a"
 dependencies = [
  "hash-db",
  "memory-db",
@@ -6269,7 +6316,7 @@ dependencies = [
 [[package]]
 name = "sp-version"
 version = "4.0.0-dev"
-source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
+source = "git+https://github.com/canyon-network/substrate?branch=canyon#046ae386043650ae388e387243881bd57d1cf75a"
 dependencies = [
  "impl-serde",
  "parity-scale-codec",
@@ -6284,7 +6331,7 @@ dependencies = [
 [[package]]
 name = "sp-version-proc-macro"
 version = "4.0.0-dev"
-source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
+source = "git+https://github.com/canyon-network/substrate?branch=canyon#046ae386043650ae388e387243881bd57d1cf75a"
 dependencies = [
  "parity-scale-codec",
  "proc-macro-crate 1.0.0",
@@ -6296,7 +6343,7 @@ dependencies = [
 [[package]]
 name = "sp-wasm-interface"
 version = "4.0.0-dev"
-source = "git+https://github.com/canyon-network/substrate?branch=canyon#3eb6e172949c43a7c9ad6f9a69687bc95a77abce"
+source = "git+https://github.com/canyon-network/substrate?branch=canyon#046ae386043650ae388e387243881bd57d1cf75a"
 dependencies = [
  "impl-trait-for-tuples",
  "parity-scale-codec",
@@ -7151,7 +7198,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04f8ab788026715fa63b31960869617cba39117e520eb415b0139543e325ab59"
 dependencies = [
  "cfg-if 0.1.10",
- "rand 0.7.3",
+ "rand 0.3.23",
  "static_assertions",
 ]
 

@@ -1,17 +1,15 @@
-use std::marker::PhantomData;
+use pallet_poa::DepthInfo;
 
 use codec::Encode;
-use subxt::{balances::Balances, module, system::System, Call};
+use subxt::{module, system::System, Store};
 
 #[module]
-pub trait Poa: Balances + System {}
+pub trait Poa: System {}
 
-#[derive(Clone, Debug, PartialEq, Encode, Call)]
-pub struct StoreCall<T: Permastore> {
-    /// Byte size of `data`.
-    pub data_size: u32,
-    /// Merkle root of the transaction data in chunks.
-    pub chunk_root: T::Hash,
-    /// Runtime marker.
-    pub _runtime: PhantomData<T>,
+/// The total issuance of the balances module.
+#[derive(Clone, Debug, Eq, PartialEq, Store, Encode)]
+pub struct HistoryDepthStore<'a, T: System> {
+    #[store(returns = DepthInfo<T::BlockNumber>)]
+    /// Account to retrieve the `AccountInfo<T>` for.
+    pub account_id: &'a T::AccountId,
 }

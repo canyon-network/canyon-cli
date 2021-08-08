@@ -14,6 +14,7 @@ pub enum Command {
     Balances(crate::command::balances::Balances),
     System(crate::command::system::System),
     Permastore(crate::command::permastore::Permastore),
+    Poa(crate::command::poa::Poa),
     /// Prints the relevant information of the provided Secret URI
     InspectKey,
 }
@@ -103,6 +104,7 @@ impl App {
             Command::Balances(balances) => balances.run(self.url, signer).await?,
             Command::System(system) => system.run(self.url, signer).await?,
             Command::Permastore(permastore) => permastore.run(self.url, signer).await?,
+            Command::Poa(poa) => poa.run(self.url, signer).await?,
             Command::InspectKey => {
                 if let Some(ref uri) = self.get_uri() {
                     sc_cli::utils::print_from_uri::<sp_core::sr25519::Pair>(
