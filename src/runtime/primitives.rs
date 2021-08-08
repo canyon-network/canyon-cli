@@ -1,7 +1,6 @@
 use sp_core::H256;
 use sp_runtime::{
-    traits::BlakeTwo256,
-    traits::{IdentifyAccount, Verify},
+    traits::{BlakeTwo256, IdentifyAccount, Verify},
     MultiSignature,
 };
 

@@ -1,4 +1,5 @@
 pub mod app;
+pub mod client;
 pub mod command;
 pub mod pallets;
 pub mod runtime;

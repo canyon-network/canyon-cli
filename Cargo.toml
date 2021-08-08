@@ -32,4 +32,5 @@ frame-support = { git = "https://github.com/canyon-network/substrate", branch = 
 pallet-indices = { git = "https://github.com/canyon-network/substrate", branch = "canyon" }
 pallet-im-online = { git = "https://github.com/canyon-network/substrate", branch = "canyon" }
 
+pallet-poa = { git = "https://github.com/canyon-network/canyon", branch = "master" }
 cp-permastore = { git = "https://github.com/canyon-network/canyon", branch = "master" }

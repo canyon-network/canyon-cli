@@ -1,11 +1,12 @@
 use anyhow::{anyhow, Result};
-use sp_core::Pair;
-use sp_keyring::AccountKeyring;
 use structopt::{
     clap::{arg_enum, AppSettings::ColoredHelp},
     StructOpt,
 };
 use subxt::PairSigner;
+
+use sp_core::Pair;
+use sp_keyring::AccountKeyring;
 
 use crate::runtime::CanyonSigner;
 
@@ -14,22 +15,24 @@ pub enum Command {
     Balances(crate::command::balances::Balances),
     System(crate::command::system::System),
     Permastore(crate::command::permastore::Permastore),
+    Poa(crate::command::poa::Poa),
     /// Prints the relevant information of the provided Secret URI
     InspectKey,
 }
 
 arg_enum! {
-  #[derive(Clone, Debug)]
-  pub enum BuiltinAccounts {
-      Alice,
-      Bob,
-      Charlie,
-      Dave,
-      Eve,
-      Ferdie,
-      One,
-      Two,
-  }
+    /// Set of test accounts.
+    #[derive(Clone, Debug)]
+    pub enum BuiltinAccounts {
+        Alice,
+        Bob,
+        Charlie,
+        Dave,
+        Eve,
+        Ferdie,
+        One,
+        Two,
+    }
 }
 
 impl From<BuiltinAccounts> for AccountKeyring {
@@ -45,6 +48,12 @@ impl From<BuiltinAccounts> for AccountKeyring {
             BuiltinAccounts::Two => Self::Two,
         }
     }
+}
+
+fn as_sr25519_signer(uri: &str) -> Result<CanyonSigner> {
+    sp_core::sr25519::Pair::from_phrase(uri, None)
+        .map(|(pair, _seed)| PairSigner::new(pair))
+        .map_err(|err| anyhow!("Failed to generate sr25519 Pair from uri: {:?}", err))
 }
 
 #[derive(StructOpt, Debug)]
@@ -79,12 +88,6 @@ pub struct App {
     pub command: Command,
 }
 
-fn as_sr25519_signer(uri: &str) -> Result<CanyonSigner> {
-    sp_core::sr25519::Pair::from_phrase(uri, None)
-        .map(|(pair, _seed)| PairSigner::new(pair))
-        .map_err(|err| anyhow!("Failed to generate sr25519 Pair from uri: {:?}", err))
-}
-
 impl App {
     pub fn init() -> Self {
         App::from_args()
@@ -103,6 +106,7 @@ impl App {
             Command::Balances(balances) => balances.run(self.url, signer).await?,
             Command::System(system) => system.run(self.url, signer).await?,
             Command::Permastore(permastore) => permastore.run(self.url, signer).await?,
+            Command::Poa(poa) => poa.run(self.url, signer).await?,
             Command::InspectKey => {
                 if let Some(ref uri) = self.get_uri() {
                     sc_cli::utils::print_from_uri::<sp_core::sr25519::Pair>(
