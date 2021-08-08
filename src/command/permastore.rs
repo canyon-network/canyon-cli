@@ -1,16 +1,14 @@
 use std::path::PathBuf;
 
 use anyhow::{anyhow, Result};
-use jsonrpsee_types::to_json_value;
-use sp_core::{hashing::twox_128, Bytes, Encode, H256};
+use sp_core::{hashing::twox_128, Encode};
 use sp_runtime::traits::{BlakeTwo256, Hash as HashT};
 use structopt::StructOpt;
-use subxt::RpcClient;
 
 use cp_permastore::CHUNK_SIZE;
 
 use crate::client::CanyonClient;
-use crate::runtime::{primitives::Hash, CanyonSigner};
+use crate::runtime::CanyonSigner;
 
 #[derive(Debug, StructOpt)]
 pub struct SharedParams {
@@ -75,40 +73,6 @@ pub fn final_storage_prefix(pallet_prefix: &str, storage_prefix: &str) -> Vec<u8
     final_prefix
 }
 
-struct PermastoreRpc<'a> {
-    rpc: &'a RpcClient,
-}
-
-impl<'a> PermastoreRpc<'a> {
-    pub fn new(rpc: &'a RpcClient) -> Self {
-        Self { rpc }
-    }
-
-    /// Submit the transaction data.
-    pub async fn submit(&self, value: Bytes) -> Result<H256> {
-        let params = &[to_json_value(value)?];
-        let data = self.rpc.request("permastore_submit", params).await?;
-        Ok(data)
-    }
-
-    /// Submit the `store` extrinsic as well as the transaction data.
-    async fn submit_extrinsic(&self, value: Bytes, data: Bytes) -> Result<H256> {
-        let params = &[to_json_value(value)?, to_json_value(data)?];
-        let data = self
-            .rpc
-            .request("permastore_submitExtrinsic", params)
-            .await?;
-        Ok(data)
-    }
-
-    ///
-    async fn remove_data(&self, chunk_root: Hash) -> Result<bool> {
-        let params = &[to_json_value(chunk_root)?];
-        let data = self.rpc.request("permastore_removeData", params).await?;
-        Ok(data)
-    }
-}
-
 impl Permastore {
     pub async fn run(self, url: String, signer: CanyonSigner) -> Result<()> {
         let client = CanyonClient::create(url).await?;
@@ -136,8 +100,7 @@ impl Permastore {
                     println!("data size in bytes: {:?}", data_size);
                     println!("        chunk root: {:?}", chunk_root);
                 } else {
-                    let permastore_rpc = PermastoreRpc::new(client.rpc_client());
-                    let ret = permastore_rpc.submit(raw_data.into()).await?;
+                    let ret = client.permastore_submit(raw_data.into()).await?;
                     println!("Submitted result: {:?}", ret);
                 }
             }
@@ -153,9 +116,8 @@ impl Permastore {
                         crate::pallets::permastore::StoreCall::new(data_size, chunk_root);
                     let uxt = client.0.create_signed(store_call, &signer).await?;
 
-                    let permastore_rpc = PermastoreRpc::new(client.rpc_client());
-                    let ret = permastore_rpc
-                        .submit_extrinsic(uxt.encode().into(), raw_data.into())
+                    let ret = client
+                        .permastore_submit_extrinsic(uxt.encode().into(), raw_data.into())
                         .await?;
                     println!("  Submitted result: {:?}", ret);
                 }
@@ -171,9 +133,7 @@ impl Permastore {
                     &mut bytes as &mut [u8],
                 )?;
 
-                let permastore_rpc = PermastoreRpc::new(client.rpc_client());
-
-                let ret = permastore_rpc.remove_data(bytes.into()).await?;
+                let ret = client.permastore_remove_data(bytes.into()).await?;
                 println!("  Submitted result: {:?}", ret);
             }
         }

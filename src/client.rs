@@ -1,15 +1,20 @@
 use anyhow::Result;
-use codec::Encode;
-use subxt::{Client, ClientBuilder, Metadata, RpcClient};
+use codec::{Decode, Encode};
+use jsonrpsee_types::{to_json_value, Subscription};
+use subxt::{Client, ClientBuilder, Metadata, RpcClient, Store};
 
-use sp_runtime::traits::{BlakeTwo256, Hash as HashT};
+use sp_core::{storage::StorageChangeSet, Bytes, H256};
+use sp_runtime::traits::{BlakeTwo256, Block as BlockT, Hash as HashT, Header as HeaderT};
 
 use cp_permastore::CHUNK_SIZE;
+use pallet_poa::DepthInfo;
 
-use crate::pallets::permastore::StoreCallExt;
-use crate::runtime::{
-    primitives::{BlockNumber, Hash},
-    CanyonRuntime, CanyonSigner,
+use crate::{
+    pallets::{permastore::StoreCallExt, poa::HistoryDepthStore},
+    runtime::{
+        primitives::{AccountId, BlockNumber, Hash},
+        CanyonRuntime, CanyonSigner,
+    },
 };
 
 /// Canyon `Client` for Canyon runtime.
@@ -29,17 +34,17 @@ impl CanyonClient {
 
     /// Returns the genesis hash.
     pub fn genesis(&self) -> &Hash {
-        &self.0.genesis()
+        self.0.genesis()
     }
 
     /// Returns the chain metadata.
     pub fn metadata(&self) -> &Metadata {
-        &self.0.metadata()
+        self.0.metadata()
     }
 
     /// Returns the rpc client.
     pub fn rpc_client(&self) -> &RpcClient {
-        &self.0.rpc_client()
+        self.0.rpc_client()
     }
 
     /// Get a block hash. By default returns the latest block hash
@@ -66,5 +71,90 @@ impl CanyonClient {
         println!("Stored result: {:?}", result);
 
         Ok(())
+    }
+}
+
+///////////////////////////////////////////////////////////////////////
+////    RPC implementataions
+///////////////////////////////////////////////////////////////////////
+impl CanyonClient {
+    //// Permastore
+    /// Submit the transaction data.
+    pub async fn permastore_submit(&self, value: Bytes) -> Result<H256> {
+        let params = &[to_json_value(value)?];
+        let data = self
+            .rpc_client()
+            .request("permastore_submit", params)
+            .await?;
+        Ok(data)
+    }
+
+    /// Submit the `store` extrinsic as well as the transaction data.
+    pub async fn permastore_submit_extrinsic(&self, value: Bytes, data: Bytes) -> Result<H256> {
+        let params = &[to_json_value(value)?, to_json_value(data)?];
+        let data = self
+            .rpc_client()
+            .request("permastore_submitExtrinsic", params)
+            .await?;
+        Ok(data)
+    }
+
+    /// Remove the transaction data given chunk root.
+    pub async fn permastore_remove_data(&self, chunk_root: Hash) -> Result<bool> {
+        let params = &[to_json_value(chunk_root)?];
+        let data = self
+            .rpc_client()
+            .request("permastore_removeData", params)
+            .await?;
+        Ok(data)
+    }
+
+    //// Poa
+    /// Subscribe to System Events that are imported into blocks.
+    ///
+    /// *WARNING* these may not be included in the finalized chain, use
+    /// `subscribe_finalized_events` to ensure events are finalized.
+    pub async fn subscribe_poa_history_depth(
+        &self,
+        who: &AccountId,
+    ) -> Result<Subscription<StorageChangeSet<Hash>>> {
+        let storage_key =
+            HistoryDepthStore::<CanyonRuntime> { account_id: who }.key(self.metadata())?;
+
+        let keys = Some(vec![storage_key]);
+
+        let params = &[to_json_value(keys)?];
+
+        let mut subscription = self
+            .rpc_client()
+            .subscribe("state_subscribeStorage", params, "state_unsubscribeStorage")
+            .await?;
+
+        while let Ok(Some(StorageChangeSet { block, changes })) = subscription.next().await {
+            if !changes.is_empty() {
+                // We only subscribed one key.
+                let (_storage_key, storage_data) = &changes[0];
+                if let Some(data) = storage_data {
+                    let new_depth_info: DepthInfo<BlockNumber> =
+                        Decode::decode(&mut data.0.as_slice())?;
+                    let number = self
+                        .0
+                        .block(Some(block))
+                        .await?
+                        .map(|chain_block| *chain_block.block.header().number())
+                        .unwrap_or_default();
+                    println!("number: {:?}", number);
+                    println!(
+                        "block #{}: {}, new_depth_info: {:?}, estimated storage ratio: {}",
+                        number,
+                        block,
+                        new_depth_info,
+                        crate::command::poa::display_storage_ratio(&new_depth_info)
+                    );
+                }
+            }
+        }
+
+        Ok(subscription)
     }
 }
