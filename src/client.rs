@@ -17,7 +17,7 @@ use crate::{
     },
 };
 
-/// Canyon `Client` for Canyon runtime.
+/// Unit type wrapper of `Client` for Canyon runtime.
 #[derive(Clone)]
 pub struct CanyonClient(pub Client<CanyonRuntime>);
 
@@ -47,13 +47,22 @@ impl CanyonClient {
         self.0.rpc_client()
     }
 
-    /// Get a block hash. By default returns the latest block hash
+    /// Get the block hash given block number.
     pub async fn block_hash(&self, block_number: Option<BlockNumber>) -> Result<Option<Hash>> {
         if let Some(number) = block_number {
             Ok(self.0.block_hash(Some(number.into())).await?)
         } else {
             Ok(None)
         }
+    }
+
+    /// Returns the block number given block hash.
+    pub async fn block_number(&self, block_hash: Hash) -> Result<Option<BlockNumber>> {
+        Ok(self
+            .0
+            .block(Some(block_hash))
+            .await?
+            .map(|signed_block| *signed_block.block.header().number()))
     }
 
     /// Send `permastore::call` extrinsic.
@@ -74,11 +83,11 @@ impl CanyonClient {
     }
 }
 
-///////////////////////////////////////////////////////////////////////
-////    RPC implementataions
-///////////////////////////////////////////////////////////////////////
+////    RPC implementations
 impl CanyonClient {
-    //// Permastore
+    ///////////////////////////////////////////////////////////////////////
+    ////    Permastore
+    ///////////////////////////////////////////////////////////////////////
     /// Submit the transaction data.
     pub async fn permastore_submit(&self, value: Bytes) -> Result<H256> {
         let params = &[to_json_value(value)?];
@@ -109,7 +118,9 @@ impl CanyonClient {
         Ok(data)
     }
 
-    //// Poa
+    ///////////////////////////////////////////////////////////////////////
+    ////    Poa
+    ///////////////////////////////////////////////////////////////////////
     async fn watch_poa_history_depth(
         &self,
         who: &AccountId,
@@ -146,12 +157,7 @@ impl CanyonClient {
                 if let Some(data) = storage_data {
                     let new_depth_info: DepthInfo<BlockNumber> =
                         Decode::decode(&mut data.0.as_slice())?;
-                    let number = self
-                        .0
-                        .block(Some(block))
-                        .await?
-                        .map(|chain_block| *chain_block.block.header().number())
-                        .unwrap_or_default();
+                    let number = self.block_number(block).await?.unwrap_or_default();
                     println!(
                         "block #{}: {}, new_depth_info: {:?}, estimated storage ratio: {}",
                         number,
