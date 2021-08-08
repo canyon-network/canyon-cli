@@ -1,12 +1,8 @@
 use std::path::PathBuf;
 
 use anyhow::{anyhow, Result};
-use jsonrpsee_types::{to_json_value, Subscription};
-use sp_core::{
-    hashing::{blake2_128, twox_128},
-    storage::{StorageChangeSet, StorageKey},
-    Bytes, Encode, H256,
-};
+use jsonrpsee_types::to_json_value;
+use sp_core::{hashing::twox_128, Bytes, Encode, H256};
 use sp_runtime::traits::{BlakeTwo256, Hash as HashT};
 use structopt::StructOpt;
 use subxt::RpcClient;
@@ -93,7 +89,7 @@ async fn store(client: &CanyonClient, signer: &CanyonSigner, data: Vec<u8>) -> R
     Ok(())
 }
 
-fn final_storage_prefix(pallet_prefix: &str, storage_prefix: &str) -> Vec<u8> {
+pub fn final_storage_prefix(pallet_prefix: &str, storage_prefix: &str) -> Vec<u8> {
     let mut final_prefix = twox_128(pallet_prefix.as_bytes()).to_vec();
     final_prefix.extend_from_slice(&twox_128(storage_prefix.as_bytes()));
     final_prefix
@@ -131,40 +127,6 @@ impl<'a> PermastoreRpc<'a> {
         let data = self.rpc.request("permastore_removeData", params).await?;
         Ok(data)
     }
-
-    /*
-    /// Subscribe to System Events that are imported into blocks.
-    ///
-    /// *WARNING* these may not be included in the finalized chain, use
-    /// `subscribe_finalized_events` to ensure events are finalized.
-    pub async fn subscribe_history_depth(&self) -> Result<Subscription<StorageChangeSet<Hash>>> {
-        use crate::runtime::{primitives::AccountId, CanyonRuntime};
-        use pallet_poa::HistoryDepth;
-        use sp_core::crypto::{Pair, Public, Ss58Codec};
-
-        let alice_stash = "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY";
-
-        let pallet_prefix = "Poa";
-        let storage_prefix = "HistoryDepth";
-
-        let mut final_key = storage_prefix(pallet_prefix, storage_prefix);
-        final_key.extend_from_slice(&blake2_128(storage_prefix.as_bytes()));
-
-        let keys = Some(vec![StorageKey::from(pallet_poa::HistoryDepth::<
-            CanyonRuntime,
-        >::hashed_key_for(
-            AccountId::from_string(alice_stash)?,
-        ))]);
-        let params = &[to_json_value(keys)?];
-
-        let subscription = self
-            .rpc
-            .subscribe("state_subscribeStorage", params, "state_unsubscribeStorage")
-            .await?;
-
-        Ok(subscription)
-    }
-    */
 }
 
 impl Permastore {
