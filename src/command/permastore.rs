@@ -151,32 +151,26 @@ impl Permastore {
                 Storage::WeaveSize { block_number } => {
                     let at = client.block_hash(block_number).await?;
                     let weave_size = client.0.weave_size(at).await?;
-                    if weave_size < 1024 {
+                    let pretty_weave_size = |n: u32| weave_size as f64 / 1024u64.pow(n) as f64;
+
+                    macro_rules! print_weave_size {
+                        ($fmt_string:expr, $n:expr) => {{
+                            println!($fmt_string, weave_size, pretty_weave_size($n));
+                        }};
+                    }
+
+                    if weave_size < 1024u64.pow(1) {
                         println!("byte size of entire weave: {}", weave_size);
-                    } else if weave_size < 1024 * 1024 {
-                        println!(
-                            "byte size of entire weave: {} ~= {:.2} KiB",
-                            weave_size,
-                            weave_size as f64 / 1024f64
-                        );
-                    } else if weave_size < 1024 * 1024 * 1024 {
-                        println!(
-                            "byte size of entire weave: {} ~= {:.4} MiB",
-                            weave_size,
-                            weave_size as f64 / 1024f64 / 1024f64
-                        );
-                    } else if weave_size < 1024 * 1024 * 1024 * 1024 {
-                        println!(
-                            "byte size of entire weave: {} ~= {:.6} GiB",
-                            weave_size,
-                            weave_size as f64 / 1024f64 / 1024f64 / 1024f64
-                        );
-                    } else if weave_size < 1024 * 1024 * 1024 * 1024 * 1024 {
-                        println!(
-                            "byte size of entire weave: {} ~= {:.8} TiB",
-                            weave_size,
-                            weave_size as f64 / 1024f64 / 1024f64 / 1024f64 / 1024f64
-                        );
+                    } else if weave_size < 1024u64.pow(2) {
+                        print_weave_size!("byte size of entire weave: {} ~= {:.2} KiB", 1);
+                    } else if weave_size < 1024u64.pow(3) {
+                        print_weave_size!("byte size of entire weave: {} ~= {:.4} MiB", 2);
+                    } else if weave_size < 1024u64.pow(4) {
+                        print_weave_size!("byte size of entire weave: {} ~= {:.6} GiB", 3);
+                    } else if weave_size < 1024u64.pow(5) {
+                        print_weave_size!("byte size of entire weave: {} ~= {:.8} TiB", 4);
+                    } else if weave_size < 1024u64.pow(6) {
+                        print_weave_size!("byte size of entire weave: {} ~= {:.10} PiB", 5);
                     } else {
                         println!("byte size of entire weave: {}", weave_size);
                     }
