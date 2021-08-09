@@ -38,11 +38,11 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact_name: canyon-cli
-            asset_name: canyon-cli-x86_64-unknown-linux-musl
+            asset_name: canyon-cli-x86_64-unknown-linux-gnu
 
           - os: windows-latest
             artifact_name: canyon-cli.exe
-            asset_name: canyon-x86_64-pc-windows-msvc
+            asset_name: canyon-cli-x86_64-pc-windows-msvc
 
           - os: macos-latest
             artifact_name: canyon-cli
