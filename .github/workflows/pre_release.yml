@@ -65,6 +65,11 @@ jobs:
 
     - uses: actions/checkout@v1
 
+    - name: Extract branch name
+      id: extract_branch
+      shell: bash
+      run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+
     - name: Build
       run: cargo build --release
 
@@ -74,4 +79,4 @@ jobs:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: target/release/${{ matrix.artifact_name }}
         asset_name: ${{ matrix.os }}-${{ matrix.asset_name }}
-        tag: ${{ github.ref }}
+        tag: ${{ steps.extract_branch.outputs.branch }}
