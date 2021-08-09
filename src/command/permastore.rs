@@ -8,7 +8,8 @@ use structopt::StructOpt;
 use cp_permastore::CHUNK_SIZE;
 
 use crate::client::CanyonClient;
-use crate::runtime::CanyonSigner;
+use crate::pallets::permastore::WeaveSizeStoreExt;
+use crate::runtime::{primitives::BlockNumber, CanyonSigner};
 
 #[derive(Debug, StructOpt)]
 pub struct SharedParams {
@@ -66,6 +67,17 @@ pub enum Permastore {
         #[structopt(index = 1, long)]
         chunk_root: String,
     },
+    /// Inspect the permastore storage items.
+    Storage(Storage),
+}
+
+#[derive(Debug, StructOpt)]
+pub enum Storage {
+    /// Size of entire weave.
+    WeaveSize {
+        #[structopt(long)]
+        block_number: Option<BlockNumber>,
+    },
 }
 
 pub fn final_storage_prefix(pallet_prefix: &str, storage_prefix: &str) -> Vec<u8> {
@@ -120,7 +132,7 @@ impl Permastore {
                     let ret = client
                         .permastore_submit_extrinsic(uxt.encode().into(), raw_data.into())
                         .await?;
-                    println!("Submitted result: {:?}", ret);
+                    println!("  Submitted result: {:?}", ret);
                 }
             }
             Self::Remove { chunk_root } => {
@@ -135,6 +147,45 @@ impl Permastore {
                 let ret = client.permastore_remove_data(bytes.into()).await?;
                 println!("Result of removing data: {:?}", ret);
             }
+            Self::Storage(storage) => match storage {
+                Storage::WeaveSize { block_number } => {
+                    let at = client.block_hash(block_number).await?;
+                    let weave_size = client.0.weave_size(at).await?;
+                    if weave_size < 1024 {
+                        println!("byte size of entire weave: {}", weave_size);
+                    } else if weave_size < 1024 * 1024 {
+                        println!(
+                            "byte size of entire weave: {} ~= {:.2} KiB",
+                            weave_size,
+                            weave_size as f64 / 1024 as f64
+                        );
+                    } else if weave_size < 1024 * 1024 * 1024 {
+                        println!(
+                            "byte size of entire weave: {} ~= {:.4} MiB",
+                            weave_size,
+                            weave_size as f64 / 1024 as f64 / 1024 as f64
+                        );
+                    } else if weave_size < 1024 * 1024 * 1024 * 1024 {
+                        println!(
+                            "byte size of entire weave: {} ~= {:.6} GiB",
+                            weave_size,
+                            weave_size as f64 / 1024 as f64 / 1024 as f64 / 1024 as f64
+                        );
+                    } else if weave_size < 1024 * 1024 * 1024 * 1024 * 1024 {
+                        println!(
+                            "byte size of entire weave: {} ~= {:.8} TiB",
+                            weave_size,
+                            weave_size as f64
+                                / 1024 as f64
+                                / 1024 as f64
+                                / 1024 as f64
+                                / 1024 as f64
+                        );
+                    } else {
+                        println!("byte size of entire weave: {}", weave_size);
+                    }
+                }
+            },
         }
 
         Ok(())
