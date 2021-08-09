@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use codec::Encode;
-use subxt::{balances::Balances, module, system::System, Call};
+use subxt::{balances::Balances, module, system::System, Call, Store};
 
 #[module]
 pub trait Permastore: Balances + System {}
@@ -25,4 +25,11 @@ impl<T: Permastore> StoreCall<T> {
             _runtime: PhantomData::<T>,
         }
     }
+}
+
+/// The size of entire weave.
+#[derive(Clone, Debug, Eq, PartialEq, Store, Encode)]
+pub struct WeaveSizeStore<T: Permastore> {
+    #[store(returns = u64)]
+    pub _runtime: PhantomData<T>,
 }
