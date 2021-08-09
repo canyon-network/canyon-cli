@@ -1,6 +1,7 @@
-on: [push, pull_request]
-# on:
-  # push:
+on:
+  push:
+    branches:
+      - 'release*'
     # Sequence of patterns matched against refs/tags
     # tags:
       # - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
@@ -9,23 +10,28 @@ name: Create Pre Release
 
 jobs:
 
-  # release:
-    # name: Create Pre Release
-    # runs-on: ubuntu-latest
-    # steps:
-      # - name: Checkout code
-        # uses: actions/checkout@master
+  release:
+    name: Create Pre Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
 
-      # - name: Create Release
-        # id: create_release
-        # uses: actions/create-release@v1
-        # env:
-          # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-        # with:
-          # tag_name: ${{ github.ref }}
-          # release_name: Release ${{ github.ref }}
-          # draft: true
-          # prerelease: true
+      - name: Extract branch name
+        id: extract_branch
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ steps.extract_branch.outputs.branch }}
+          release_name: Release ${{ steps.extract_branch.outputs.branch }}
+          draft: true
+          prerelease: true
 
   publish:
     name: Publish for ${{ matrix.os }}
@@ -36,6 +42,10 @@ jobs:
         # https://github.community/t5/How-to-use-Git-and-GitHub/GitHub-Actions-Matrix-options-dont-work-as-documented/td-p/29558
         os: [ubuntu-18.04, ubuntu-latest, windows-latest, macos-latest]
         include:
+          - os: ubuntu-18.04
+            artifact_name: canyon-cli
+            asset_name: canyon-cli-x86_64-unknown-linux-gnu
+
           - os: ubuntu-latest
             artifact_name: canyon-cli
             asset_name: canyon-cli-x86_64-unknown-linux-gnu
