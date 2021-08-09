@@ -157,29 +157,25 @@ impl Permastore {
                         println!(
                             "byte size of entire weave: {} ~= {:.2} KiB",
                             weave_size,
-                            weave_size as f64 / 1024 as f64
+                            weave_size as f64 / 1024f64
                         );
                     } else if weave_size < 1024 * 1024 * 1024 {
                         println!(
                             "byte size of entire weave: {} ~= {:.4} MiB",
                             weave_size,
-                            weave_size as f64 / 1024 as f64 / 1024 as f64
+                            weave_size as f64 / 1024f64 / 1024f64
                         );
                     } else if weave_size < 1024 * 1024 * 1024 * 1024 {
                         println!(
                             "byte size of entire weave: {} ~= {:.6} GiB",
                             weave_size,
-                            weave_size as f64 / 1024 as f64 / 1024 as f64 / 1024 as f64
+                            weave_size as f64 / 1024f64 / 1024f64 / 1024f64
                         );
                     } else if weave_size < 1024 * 1024 * 1024 * 1024 * 1024 {
                         println!(
                             "byte size of entire weave: {} ~= {:.8} TiB",
                             weave_size,
-                            weave_size as f64
-                                / 1024 as f64
-                                / 1024 as f64
-                                / 1024 as f64
-                                / 1024 as f64
+                            weave_size as f64 / 1024f64 / 1024f64 / 1024f64 / 1024f64
                         );
                     } else {
                         println!("byte size of entire weave: {}", weave_size);
