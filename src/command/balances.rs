@@ -23,6 +23,9 @@ pub enum Balances {
         /// amount
         #[structopt(index = 2)]
         value: u128,
+        /// Prints the encoded extrinsic without sending it actually.
+        #[structopt(long)]
+        dry_run: bool,
     },
     /// Inspect the balances storage items.
     Storage(Storage),
@@ -44,18 +47,39 @@ impl Balances {
         let client = CanyonClient::create(url).await?;
 
         match self {
-            Balances::Transfer { dest, value } => {
-                let result = client
-                    .0
-                    .transfer_and_watch(&signer, &dest.into(), value)
-                    .await?;
-                if let Some(event) = result.transfer()? {
-                    println!("Balance transfer success: value: {:?}", event.amount);
+            Self::Transfer {
+                dest,
+                value,
+                dry_run,
+            } => {
+                use sp_core::Pair;
+
+                if dry_run {
+                    println!(
+                        "signer: {}, dest: {:?}, value: {}",
+                        signer.signer().public(),
+                        dest,
+                        value
+                    );
+                    let transfer_call = subxt::balances::TransferCall {
+                        to: &dest.into(),
+                        amount: value,
+                    };
+                    let uxt = client.0.create_signed(transfer_call, &signer).await?;
+                    println!("uxt: {:?}", uxt);
                 } else {
-                    println!("Failed to find Balances::Transfer Event");
+                    let result = client
+                        .0
+                        .transfer_and_watch(&signer, &dest.into(), value)
+                        .await?;
+                    if let Some(event) = result.transfer()? {
+                        println!("Balance transfer success: value: {:?}", event.amount);
+                    } else {
+                        println!("Failed to find Balances::Transfer Event");
+                    }
                 }
             }
-            Balances::Storage(storage) => match storage {
+            Self::Storage(storage) => match storage {
                 Storage::Locks { who, block_number } => {
                     let at = client.block_hash(block_number).await?;
                     let locks = client.0.locks(&who, at).await?;
