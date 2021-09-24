@@ -8,7 +8,7 @@ edition = "2018"
 anyhow = "1.0"
 async-std = { version = "1.6.2", features = ["attributes"] }
 async-trait = "0.1.49"
-codec = { package = "parity-scale-codec", version = "2.1", features = ["derive", "full"] }
+codec = { package = "parity-scale-codec", version = "2.3", features = ["derive", "full"] }
 env_logger = "0.8.1"
 jsonrpsee-types = "0.3.0"
 hex = "0.4"
@@ -19,18 +19,18 @@ tokio = { version = "1.6", features = ["rt", "macros"] }
 
 subxt = { package = "substrate-subxt", git = "https://github.com/canyon-network/substrate-subxt", branch = "canyon" }
 
-sc-cli = { git = "https://github.com/canyon-network/substrate", branch = "canyon" }
+sc-cli = { git = "https://github.com/paritytech/substrate", rev = "c7a6264758ddee13e06908aaf3444febd580a7b4" }
 
-sp-authority-discovery = { git = "https://github.com/canyon-network/substrate", branch = "canyon" }
-sp-consensus-babe = { git = "https://github.com/canyon-network/substrate", branch = "canyon" }
-sp-core = { git = "https://github.com/canyon-network/substrate", branch = "canyon" }
-sp-finality-grandpa = { git = "https://github.com/canyon-network/substrate", branch = "canyon" }
-sp-keyring = { git = "https://github.com/canyon-network/substrate", branch = "canyon" }
-sp-runtime = { git = "https://github.com/canyon-network/substrate", branch = "canyon" }
+sp-authority-discovery = { git = "https://github.com/paritytech/substrate", rev = "c7a6264758ddee13e06908aaf3444febd580a7b4" }
+sp-consensus-babe = { git = "https://github.com/paritytech/substrate", rev = "c7a6264758ddee13e06908aaf3444febd580a7b4" }
+sp-core = { git = "https://github.com/paritytech/substrate", rev = "c7a6264758ddee13e06908aaf3444febd580a7b4" }
+sp-finality-grandpa = { git = "https://github.com/paritytech/substrate", rev = "c7a6264758ddee13e06908aaf3444febd580a7b4" }
+sp-keyring = { git = "https://github.com/paritytech/substrate", rev = "c7a6264758ddee13e06908aaf3444febd580a7b4" }
+sp-runtime = { git = "https://github.com/paritytech/substrate", rev = "c7a6264758ddee13e06908aaf3444febd580a7b4" }
 
-frame-support = { git = "https://github.com/canyon-network/substrate", branch = "canyon" }
-pallet-indices = { git = "https://github.com/canyon-network/substrate", branch = "canyon" }
-pallet-im-online = { git = "https://github.com/canyon-network/substrate", branch = "canyon" }
+frame-support = { git = "https://github.com/paritytech/substrate", rev = "c7a6264758ddee13e06908aaf3444febd580a7b4" }
+pallet-indices = { git = "https://github.com/paritytech/substrate", rev = "c7a6264758ddee13e06908aaf3444febd580a7b4" }
+pallet-im-online = { git = "https://github.com/paritytech/substrate", rev = "c7a6264758ddee13e06908aaf3444febd580a7b4" }
 
-pallet-poa = { git = "https://github.com/canyon-network/canyon", branch = "master" }
-cp-permastore = { git = "https://github.com/canyon-network/canyon", branch = "master" }
+pallet-poa = { git = "https://github.com/canyon-network/canyon", branch = "initial-network" }
+cp-permastore = { git = "https://github.com/canyon-network/canyon", branch = "initial-network" }
